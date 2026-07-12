@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BachatKhana — Khana Bachao, Paise Bachao</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>html,body{margin:0;padding:0}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect } = React;
+
+
+/* ============ BachatKhana — Surplus Food Marketplace (Indore) ============
+   Demo prototype • In-memory state • 8 bhasha support 🇮🇳
+   Languages: Hinglish, English, हिंदी, मराठी, ગુજરાતી, বাংলা, தமிழ், తెలుగు
+========================================================================== */
+
+const T = {
+  green: "#0E5E36",
+  greenDeep: "#0A4228",
+  haldi: "#F5B82E",
+  haldiSoft: "#FDF3DC",
+  mirch: "#E0532F",
+  ink: "#17281F",
+  body: "#44534A",
+  paper: "#F3F6F1",
+  card: "#FFFFFF",
+  line: "#E1E8E0",
+};
+
+const LANGS = [
+  { key: "hinglish", native: "Hinglish", sub: "Hindi + English" },
+  { key: "en", native: "English", sub: "English" },
+  { key: "hi", native: "हिंदी", sub: "Hindi" },
+  { key: "mr", native: "मराठी", sub: "Marathi" },
+  { key: "gu", native: "ગુજરાતી", sub: "Gujarati" },
+  { key: "bn", native: "বাংলা", sub: "Bengali" },
+  { key: "ta", native: "தமிழ்", sub: "Tamil" },
+  { key: "te", native: "తెలుగు", sub: "Telugu" },
+];
+
+/* ---------------- Translations ---------------- */
+const STR = {
+  hinglish: {
+    tagline: "Khana bachao, paise bachao — surplus khana 70% tak sasta",
+    statMeals: "meals bachaye", statSavings: "customer bachat", statFood: "khana saved",
+    tabShop: "Khareedo", tabParchi: "Meri Parchi", tabDukaan: "Dukaan",
+    allAreas: "Sab",
+    dealsLive: (n) => `Aaj ki bachat • ${n} deals live 🔥`,
+    book: "Book karo", soldOut: "Sold out", left: (n) => `${n} bache`, finished: "khatam",
+    pickupPrefix: "Pickup",
+    emptyArea: "Is area mein abhi koi deal nahi — thodi der mein dekho!",
+    howMany: "Kitne chahiye?", total: "Total",
+    youSave: (x) => `(${x} ki bachat!)`,
+    pickupNote: (w) => `Pickup window: ${w} · self-pickup only · allergen info dukaan pe poochho`,
+    payUpi: (x) => `UPI se pay karo — ${x}`,
+    paying: "UPI payment ho raha hai…", demoNote: "demo mode — koi asli paisa nahi kat raha 😄",
+    confirmed: "Booking pakki!", showParchi: "Yeh parchi dukaan pe dikhao",
+    parchiLabel: "Pickup Parchi", viewParchi: "Meri parchi dekho",
+    noParchi: "Abhi koi parchi nahi", bookToGet: "Deal book karo — parchi yahan milegi", seeDeals: "Deals dekho",
+    ready: "Ready", collectedTag: "Collect ho gaya ✓", savedAmt: (x) => `${x} bachaya`,
+    parchiHint: "Dukaan pe code bolo ya dikhao — bas, khana aapka! 🙌",
+    dashTitle: "🏪 Dukaan Dashboard",
+    dashNote: "Demo mode — surplus list karo, parchi verify karo. Asli app mein FSSAI onboarding ke baad live hoga.",
+    verifyTitle: "Parchi verify karo", verifySub: "Customer ka code daalo (jaise IND-4827)", check: "Check",
+    verifyOk: (c) => `Parchi ${c} verified — khana de do! ✅`,
+    verifyFail: "Yeh code nahi mila ya pehle hi collect ho chuka hai.",
+    demoHint: (n, c) => `Demo hint: abhi ${n} ready parchi hai — ${c}`,
+    newListing: "Nayi listing banao", itemName: "Item ka naam",
+    itemPh: "jaise: Samosa + kachori combo (4 pc)",
+    typeLabel: "Type", qtyLabel: "Qty", emojiLabel: "Emoji",
+    veg: "🟢 Veg", nonveg: "🔴 Non-veg", mrpLabel: "MRP (₹)", priceLabel: "Bachat price (₹)",
+    offPreview: (p) => `Customer ko dikhega: -${p}% OFF 🔥`,
+    windowLabel: "Pickup window", goLive: "Listing live karo", myListings: "Meri listings", live: "Live",
+    toastFill: "Item, MRP aur bachat price — teeno bharo",
+    toastPrice: "Bachat price MRP se kam hona chahiye",
+    toastLive: "Listing live ho gayi! 🎉",
+    loginPhone: "Mobile number (10 digit)", loginPhoneErr: "10 digit ka number daalo", loginSend: "OTP bhejo",
+    loginOtpSent: (p) => `OTP bheja gaya +91 ${p} pe`, loginOtpPh: "6-digit OTP", loginName: "Apna naam",
+    loginVerify: "Verify karo", loginDemoOtp: (o) => `Demo OTP: ${o} (asli app mein SMS aayega)`,
+    loginErr: "Galat OTP — dobara try karo", loginChange: "Number badlo", logoutQ: "Logout karna hai?",
+    langTitle: "Bhasha chuno · Choose language",
+  },
+  en: {
+    tagline: "Save food, save money — surplus food up to 70% off",
+    statMeals: "meals saved", statSavings: "customer savings", statFood: "food saved",
+    tabShop: "Buy", tabParchi: "My Parchi", tabDukaan: "Seller",
+    allAreas: "All",
+    dealsLive: (n) => `Today's savings • ${n} deals live 🔥`,
+    book: "Book now", soldOut: "Sold out", left: (n) => `${n} left`, finished: "gone",
+    pickupPrefix: "Pickup",
+    emptyArea: "No deals in this area right now — check back soon!",
+    howMany: "How many?", total: "Total",
+    youSave: (x) => `(you save ${x}!)`,
+    pickupNote: (w) => `Pickup window: ${w} · self-pickup only · ask the shop about allergens`,
+    payUpi: (x) => `Pay with UPI — ${x}`,
+    paying: "Processing UPI payment…", demoNote: "demo mode — no real money is charged 😄",
+    confirmed: "Booking confirmed!", showParchi: "Show this parchi at the shop",
+    parchiLabel: "Pickup Parchi", viewParchi: "View my parchi",
+    noParchi: "No parchi yet", bookToGet: "Book a deal — your parchi appears here", seeDeals: "See deals",
+    ready: "Ready", collectedTag: "Collected ✓", savedAmt: (x) => `${x} saved`,
+    parchiHint: "Say or show the code at the shop — that's it, the food is yours! 🙌",
+    dashTitle: "🏪 Seller Dashboard",
+    dashNote: "Demo mode — list surplus, verify parchis. The real app goes live after FSSAI onboarding.",
+    verifyTitle: "Verify parchi", verifySub: "Enter the customer's code (e.g. IND-4827)", check: "Check",
+    verifyOk: (c) => `Parchi ${c} verified — hand over the food! ✅`,
+    verifyFail: "Code not found, or already collected.",
+    demoHint: (n, c) => `Demo hint: ${n} parchi ready — ${c}`,
+    newListing: "Create a new listing", itemName: "Item name",
+    itemPh: "e.g. Samosa + kachori combo (4 pc)",
+    typeLabel: "Type", qtyLabel: "Qty", emojiLabel: "Emoji",
+    veg: "🟢 Veg", nonveg: "🔴 Non-veg", mrpLabel: "MRP (₹)", priceLabel: "Bachat price (₹)",
+    offPreview: (p) => `Customers will see: -${p}% OFF 🔥`,
+    windowLabel: "Pickup window", goLive: "Go live", myListings: "My listings", live: "Live",
+    toastFill: "Fill item, MRP and bachat price",
+    toastPrice: "Bachat price must be below MRP",
+    toastLive: "Listing is live! 🎉",
+    loginPhone: "Mobile number (10 digits)", loginPhoneErr: "Enter a 10-digit number", loginSend: "Send OTP",
+    loginOtpSent: (p) => `OTP sent to +91 ${p}`, loginOtpPh: "6-digit OTP", loginName: "Your name",
+    loginVerify: "Verify", loginDemoOtp: (o) => `Demo OTP: ${o} (real app sends SMS)`,
+    loginErr: "Wrong OTP — try again", loginChange: "Change number", logoutQ: "Log out?",
+    langTitle: "Choose language · Bhasha chuno",
+  },
+  hi: {
+    tagline: "खाना बचाओ, पैसे बचाओ — सरप्लस खाना 70% तक सस्ता",
+    statMeals: "भोजन बचाए", statSavings: "ग्राहक बचत", statFood: "खाना बचाया",
+    tabShop: "खरीदो", tabParchi: "मेरी पर्ची", tabDukaan: "दुकान",
+    allAreas: "सब",
+    dealsLive: (n) => `आज की बचत • ${n} डील्स लाइव 🔥`,
+    book: "बुक करो", soldOut: "खत्म", left: (n) => `${n} बचे`, finished: "खत्म",
+    pickupPrefix: "पिकअप",
+    emptyArea: "इस एरिया में अभी कोई डील नहीं — थोड़ी देर में देखो!",
+    howMany: "कितने चाहिए?", total: "कुल",
+    youSave: (x) => `(${x} की बचत!)`,
+    pickupNote: (w) => `पिकअप विंडो: ${w} · सेल्फ-पिकअप · एलर्जी की जानकारी दुकान से पूछें`,
+    payUpi: (x) => `UPI से पे करो — ${x}`,
+    paying: "UPI पेमेंट हो रहा है…", demoNote: "डेमो मोड — कोई असली पैसा नहीं कट रहा 😄",
+    confirmed: "बुकिंग पक्की!", showParchi: "यह पर्ची दुकान पे दिखाओ",
+    parchiLabel: "पिकअप पर्ची", viewParchi: "मेरी पर्ची देखो",
+    noParchi: "अभी कोई पर्ची नहीं", bookToGet: "डील बुक करो — पर्ची यहाँ मिलेगी", seeDeals: "डील्स देखो",
+    ready: "तैयार", collectedTag: "कलेक्ट हो गया ✓", savedAmt: (x) => `${x} बचाया`,
+    parchiHint: "दुकान पे कोड बोलो या दिखाओ — बस, खाना आपका! 🙌",
+    dashTitle: "🏪 दुकान डैशबोर्ड",
+    dashNote: "डेमो मोड — सरप्लस लिस्ट करो, पर्ची वेरिफाई करो। असली ऐप FSSAI ऑनबोर्डिंग के बाद लाइव होगा।",
+    verifyTitle: "पर्ची वेरिफाई करो", verifySub: "कस्टमर का कोड डालो (जैसे IND-4827)", check: "चेक",
+    verifyOk: (c) => `पर्ची ${c} वेरिफाइड — खाना दे दो! ✅`,
+    verifyFail: "यह कोड नहीं मिला या पहले ही कलेक्ट हो चुका है।",
+    demoHint: (n, c) => `डेमो हिंट: अभी ${n} रेडी पर्ची — ${c}`,
+    newListing: "नई लिस्टिंग बनाओ", itemName: "आइटम का नाम",
+    itemPh: "जैसे: समोसा + कचौरी कॉम्बो (4 pc)",
+    typeLabel: "टाइप", qtyLabel: "मात्रा", emojiLabel: "इमोजी",
+    veg: "🟢 वेज", nonveg: "🔴 नॉन-वेज", mrpLabel: "MRP (₹)", priceLabel: "बचत प्राइस (₹)",
+    offPreview: (p) => `कस्टमर को दिखेगा: -${p}% OFF 🔥`,
+    windowLabel: "पिकअप विंडो", goLive: "लिस्टिंग लाइव करो", myListings: "मेरी लिस्टिंग्स", live: "लाइव",
+    toastFill: "आइटम, MRP और बचत प्राइस — तीनों भरो",
+    toastPrice: "बचत प्राइस MRP से कम होना चाहिए",
+    toastLive: "लिस्टिंग लाइव हो गई! 🎉",
+    loginPhone: "मोबाइल नंबर (10 अंक)", loginPhoneErr: "10 अंक का नंबर डालो", loginSend: "OTP भेजो",
+    loginOtpSent: (p) => `OTP भेजा गया +91 ${p} पे`, loginOtpPh: "6-अंक OTP", loginName: "आपका नाम",
+    loginVerify: "वेरिफाई करो", loginDemoOtp: (o) => `डेमो OTP: ${o} (असली ऐप में SMS आएगा)`,
+    loginErr: "गलत OTP — दोबारा try करो", loginChange: "नंबर बदलो", logoutQ: "लॉगआउट करना है?",
+    langTitle: "भाषा चुनो · Choose language",
+  },
+  mr: {
+    tagline: "अन्न वाचवा, पैसे वाचवा — सरप्लस अन्न 70% पर्यंत स्वस्त",
+    statMeals: "जेवणं वाचवली", statSavings: "ग्राहक बचत", statFood: "अन्न वाचवले",
+    tabShop: "खरेदी", tabParchi: "माझी पर्ची", tabDukaan: "दुकान",
+    allAreas: "सर्व",
+    dealsLive: (n) => `आजची बचत • ${n} डील्स लाइव्ह 🔥`,
+    book: "बुक करा", soldOut: "संपले", left: (n) => `${n} शिल्लक`, finished: "संपले",
+    pickupPrefix: "पिकअप",
+    emptyArea: "या भागात सध्या कोणतीही डील नाही — थोड्या वेळाने पहा!",
+    howMany: "किती हवे?", total: "एकूण",
+    youSave: (x) => `(${x} ची बचत!)`,
+    pickupNote: (w) => `पिकअप विंडो: ${w} · सेल्फ-पिकअप · ॲलर्जीची माहिती दुकानात विचारा`,
+    payUpi: (x) => `UPI ने पे करा — ${x}`,
+    paying: "UPI पेमेंट होत आहे…", demoNote: "डेमो मोड — खरे पैसे कापले जात नाहीत 😄",
+    confirmed: "बुकिंग पक्की!", showParchi: "ही पर्ची दुकानात दाखवा",
+    parchiLabel: "पिकअप पर्ची", viewParchi: "माझी पर्ची पहा",
+    noParchi: "अजून पर्ची नाही", bookToGet: "डील बुक करा — पर्ची इथे मिळेल", seeDeals: "डील्स पहा",
+    ready: "तयार", collectedTag: "कलेक्ट झाले ✓", savedAmt: (x) => `${x} वाचवले`,
+    parchiHint: "दुकानात कोड सांगा किंवा दाखवा — बस्स, जेवण तुमचं! 🙌",
+    dashTitle: "🏪 दुकान डॅशबोर्ड",
+    dashNote: "डेमो मोड — सरप्लस लिस्ट करा, पर्ची व्हेरिफाय करा. खरे ॲप FSSAI ऑनबोर्डिंगनंतर लाइव्ह होईल.",
+    verifyTitle: "पर्ची व्हेरिफाय करा", verifySub: "ग्राहकाचा कोड टाका (उदा. IND-4827)", check: "तपासा",
+    verifyOk: (c) => `पर्ची ${c} व्हेरिफाइड — जेवण द्या! ✅`,
+    verifyFail: "हा कोड सापडला नाही किंवा आधीच कलेक्ट झाला आहे.",
+    demoHint: (n, c) => `डेमो हिंट: ${n} रेडी पर्ची — ${c}`,
+    newListing: "नवीन लिस्टिंग बनवा", itemName: "आयटमचे नाव",
+    itemPh: "उदा: समोसा + कचोरी कॉम्बो (4 pc)",
+    typeLabel: "प्रकार", qtyLabel: "नग", emojiLabel: "इमोजी",
+    veg: "🟢 व्हेज", nonveg: "🔴 नॉन-व्हेज", mrpLabel: "MRP (₹)", priceLabel: "बचत किंमत (₹)",
+    offPreview: (p) => `ग्राहकाला दिसेल: -${p}% OFF 🔥`,
+    windowLabel: "पिकअप विंडो", goLive: "लिस्टिंग लाइव्ह करा", myListings: "माझ्या लिस्टिंग्स", live: "लाइव्ह",
+    toastFill: "आयटम, MRP आणि बचत किंमत — तिन्ही भरा",
+    toastPrice: "बचत किंमत MRP पेक्षा कमी हवी",
+    toastLive: "लिस्टिंग लाइव्ह झाली! 🎉",
+    loginPhone: "मोबाइल नंबर (10 अंकी)", loginPhoneErr: "10 अंकी नंबर टाका", loginSend: "OTP पाठवा",
+    loginOtpSent: (p) => `OTP पाठवला +91 ${p} वर`, loginOtpPh: "6-अंकी OTP", loginName: "तुमचे नाव",
+    loginVerify: "व्हेरिफाय करा", loginDemoOtp: (o) => `डेमो OTP: ${o} (खऱ्या ॲपमध्ये SMS येईल)`,
+    loginErr: "चुकीचा OTP — पुन्हा प्रयत्न करा", loginChange: "नंबर बदला", logoutQ: "लॉगआउट करायचे?",
+    langTitle: "भाषा निवडा · Choose language",
+  },
+  gu: {
+    tagline: "ખોરાક બચાવો, પૈસા બચાવો — સરપ્લસ ખોરાક 70% સુધી સસ્તો",
+    statMeals: "ભોજન બચાવ્યાં", statSavings: "ગ્રાહક બચત", statFood: "ખોરાક બચાવ્યો",
+    tabShop: "ખરીદો", tabParchi: "મારી પરચી", tabDukaan: "દુકાન",
+    allAreas: "બધા",
+    dealsLive: (n) => `આજની બચત • ${n} ડીલ્સ લાઇવ 🔥`,
+    book: "બુક કરો", soldOut: "પૂરું", left: (n) => `${n} બાકી`, finished: "પૂરું",
+    pickupPrefix: "પિકઅપ",
+    emptyArea: "આ વિસ્તારમાં હમણાં કોઈ ડીલ નથી — થોડી વારમાં જુઓ!",
+    howMany: "કેટલા જોઈએ?", total: "કુલ",
+    youSave: (x) => `(${x} ની બચત!)`,
+    pickupNote: (w) => `પિકઅપ વિન્ડો: ${w} · સેલ્ફ-પિકઅપ · એલર્જી માહિતી દુકાનમાં પૂછો`,
+    payUpi: (x) => `UPI થી પે કરો — ${x}`,
+    paying: "UPI પેમેન્ટ થઈ રહ્યું છે…", demoNote: "ડેમો મોડ — કોઈ ખરા પૈસા કપાતા નથી 😄",
+    confirmed: "બુકિંગ પાક્કું!", showParchi: "આ પરચી દુકાનમાં બતાવો",
+    parchiLabel: "પિકઅપ પરચી", viewParchi: "મારી પરચી જુઓ",
+    noParchi: "હજી કોઈ પરચી નથી", bookToGet: "ડીલ બુક કરો — પરચી અહીં મળશે", seeDeals: "ડીલ્સ જુઓ",
+    ready: "તૈયાર", collectedTag: "કલેક્ટ થઈ ગયું ✓", savedAmt: (x) => `${x} બચાવ્યા`,
+    parchiHint: "દુકાનમાં કોડ કહો કે બતાવો — બસ, ખાવાનું તમારું! 🙌",
+    dashTitle: "🏪 દુકાન ડેશબોર્ડ",
+    dashNote: "ડેમો મોડ — સરપ્લસ લિસ્ટ કરો, પરચી વેરિફાય કરો. ખરી એપ FSSAI ઓનબોર્ડિંગ પછી લાઇવ થશે.",
+    verifyTitle: "પરચી વેરિફાય કરો", verifySub: "ગ્રાહકનો કોડ નાખો (જેમ કે IND-4827)", check: "ચેક",
+    verifyOk: (c) => `પરચી ${c} વેરિફાઇડ — ખાવાનું આપી દો! ✅`,
+    verifyFail: "આ કોડ મળ્યો નથી અથવા પહેલેથી કલેક્ટ થઈ ગયો છે.",
+    demoHint: (n, c) => `ડેમો હિન્ટ: ${n} રેડી પરચી — ${c}`,
+    newListing: "નવી લિસ્ટિંગ બનાવો", itemName: "આઇટમનું નામ",
+    itemPh: "જેમ કે: સમોસા + કચોરી કોમ્બો (4 pc)",
+    typeLabel: "પ્રકાર", qtyLabel: "જથ્થો", emojiLabel: "ઇમોજી",
+    veg: "🟢 વેજ", nonveg: "🔴 નોન-વેજ", mrpLabel: "MRP (₹)", priceLabel: "બચત ભાવ (₹)",
+    offPreview: (p) => `ગ્રાહકને દેખાશે: -${p}% OFF 🔥`,
+    windowLabel: "પિકઅપ વિન્ડો", goLive: "લિસ્ટિંગ લાઇવ કરો", myListings: "મારી લિસ્ટિંગ્સ", live: "લાઇવ",
+    toastFill: "આઇટમ, MRP અને બચત ભાવ — ત્રણેય ભરો",
+    toastPrice: "બચત ભાવ MRP થી ઓછો હોવો જોઈએ",
+    toastLive: "લિસ્ટિંગ લાઇવ થઈ ગઈ! 🎉",
+    loginPhone: "મોબાઇલ નંબર (10 અંક)", loginPhoneErr: "10 અંકનો નંબર નાખો", loginSend: "OTP મોકલો",
+    loginOtpSent: (p) => `OTP મોકલ્યો +91 ${p} પર`, loginOtpPh: "6-અંક OTP", loginName: "તમારું નામ",
+    loginVerify: "વેરિફાય કરો", loginDemoOtp: (o) => `ડેમો OTP: ${o} (ખરી એપમાં SMS આવશે)`,
+    loginErr: "ખોટો OTP — ફરી પ્રયત્ન કરો", loginChange: "નંબર બદલો", logoutQ: "લૉગઆઉટ કરવું છે?",
+    langTitle: "ભાષા પસંદ કરો · Choose language",
+  },
+  bn: {
+    tagline: "খাবার বাঁচান, টাকা বাঁচান — সারপ্লাস খাবার ৭০% পর্যন্ত সস্তা",
+    statMeals: "খাবার বাঁচানো", statSavings: "গ্রাহক সঞ্চয়", statFood: "খাবার বাঁচানো",
+    tabShop: "কিনুন", tabParchi: "আমার পরচি", tabDukaan: "দোকান",
+    allAreas: "সব",
+    dealsLive: (n) => `আজকের সাশ্রয় • ${n}টি ডিল লাইভ 🔥`,
+    book: "বুক করুন", soldOut: "শেষ", left: (n) => `${n}টি বাকি`, finished: "শেষ",
+    pickupPrefix: "পিকআপ",
+    emptyArea: "এই এলাকায় এখন কোনো ডিল নেই — একটু পরে দেখুন!",
+    howMany: "কয়টি চাই?", total: "মোট",
+    youSave: (x) => `(${x} সাশ্রয়!)`,
+    pickupNote: (w) => `পিকআপ উইন্ডো: ${w} · সেল্ফ-পিকআপ · অ্যালার্জি তথ্য দোকানে জিজ্ঞেস করুন`,
+    payUpi: (x) => `UPI দিয়ে পে করুন — ${x}`,
+    paying: "UPI পেমেন্ট হচ্ছে…", demoNote: "ডেমো মোড — আসল টাকা কাটা হচ্ছে না 😄",
+    confirmed: "বুকিং কনফার্ম!", showParchi: "এই পরচি দোকানে দেখান",
+    parchiLabel: "পিকআপ পরচি", viewParchi: "আমার পরচি দেখুন",
+    noParchi: "এখনো কোনো পরচি নেই", bookToGet: "ডিল বুক করুন — পরচি এখানে পাবেন", seeDeals: "ডিল দেখুন",
+    ready: "রেডি", collectedTag: "কালেক্ট হয়েছে ✓", savedAmt: (x) => `${x} সাশ্রয়`,
+    parchiHint: "দোকানে কোডটি বলুন বা দেখান — ব্যস, খাবার আপনার! 🙌",
+    dashTitle: "🏪 দোকান ড্যাশবোর্ড",
+    dashNote: "ডেমো মোড — সারপ্লাস লিস্ট করুন, পরচি ভেরিফাই করুন। আসল অ্যাপ FSSAI অনবোর্ডিংয়ের পরে লাইভ হবে।",
+    verifyTitle: "পরচি ভেরিফাই করুন", verifySub: "গ্রাহকের কোড দিন (যেমন IND-4827)", check: "চেক",
+    verifyOk: (c) => `পরচি ${c} ভেরিফাইড — খাবার দিয়ে দিন! ✅`,
+    verifyFail: "এই কোড পাওয়া যায়নি বা আগেই কালেক্ট হয়ে গেছে।",
+    demoHint: (n, c) => `ডেমো হিন্ট: ${n}টি রেডি পরচি — ${c}`,
+    newListing: "নতুন লিস্টিং বানান", itemName: "আইটেমের নাম",
+    itemPh: "যেমন: সিঙাড়া + কচুরি কম্বো (৪ pc)",
+    typeLabel: "ধরন", qtyLabel: "পরিমাণ", emojiLabel: "ইমোজি",
+    veg: "🟢 ভেজ", nonveg: "🔴 নন-ভেজ", mrpLabel: "MRP (₹)", priceLabel: "সাশ্রয়ী দাম (₹)",
+    offPreview: (p) => `গ্রাহক দেখবেন: -${p}% OFF 🔥`,
+    windowLabel: "পিকআপ উইন্ডো", goLive: "লিস্টিং লাইভ করুন", myListings: "আমার লিস্টিং", live: "লাইভ",
+    toastFill: "আইটেম, MRP ও সাশ্রয়ী দাম — তিনটিই দিন",
+    toastPrice: "সাশ্রয়ী দাম MRP-এর কম হতে হবে",
+    toastLive: "লিস্টিং লাইভ হয়ে গেছে! 🎉",
+    loginPhone: "মোবাইল নম্বর (১০ সংখ্যা)", loginPhoneErr: "১০ সংখ্যার নম্বর দিন", loginSend: "OTP পাঠান",
+    loginOtpSent: (p) => `OTP পাঠানো হয়েছে +91 ${p}-এ`, loginOtpPh: "৬-সংখ্যার OTP", loginName: "আপনার নাম",
+    loginVerify: "ভেরিফাই করুন", loginDemoOtp: (o) => `ডেমো OTP: ${o} (আসল অ্যাপে SMS আসবে)`,
+    loginErr: "ভুল OTP — আবার চেষ্টা করুন", loginChange: "নম্বর বদলান", logoutQ: "লগআউট করবেন?",
+    langTitle: "ভাষা বাছুন · Choose language",
+  },
+  ta: {
+    tagline: "உணவை சேமியுங்கள், பணத்தை சேமியுங்கள் — மீதி உணவு 70% வரை தள்ளுபடி",
+    statMeals: "உணவுகள் சேமிப்பு", statSavings: "வாடிக்கையாளர் சேமிப்பு", statFood: "உணவு சேமிப்பு",
+    tabShop: "வாங்கு", tabParchi: "என் பர்ச்சி", tabDukaan: "கடை",
+    allAreas: "அனைத்தும்",
+    dealsLive: (n) => `இன்றைய சேமிப்பு • ${n} டீல்கள் லைவ் 🔥`,
+    book: "புக் செய்", soldOut: "விற்றுத் தீர்ந்தது", left: (n) => `${n} மீதம்`, finished: "தீர்ந்தது",
+    pickupPrefix: "பிக்கப்",
+    emptyArea: "இந்த பகுதியில் இப்போது டீல் இல்லை — சிறிது நேரம் கழித்து பாருங்கள்!",
+    howMany: "எத்தனை வேண்டும்?", total: "மொத்தம்",
+    youSave: (x) => `(${x} சேமிப்பு!)`,
+    pickupNote: (w) => `பிக்கப் நேரம்: ${w} · சுய பிக்கப் · அலர்ஜி விவரம் கடையில் கேளுங்கள்`,
+    payUpi: (x) => `UPI மூலம் செலுத்து — ${x}`,
+    paying: "UPI பேமெண்ட் நடக்கிறது…", demoNote: "டெமோ முறை — உண்மையான பணம் எடுக்கப்படாது 😄",
+    confirmed: "புக்கிங் உறுதி!", showParchi: "இந்த பர்ச்சியை கடையில் காட்டுங்கள்",
+    parchiLabel: "பிக்கப் பர்ச்சி", viewParchi: "என் பர்ச்சியை பார்",
+    noParchi: "இன்னும் பர்ச்சி இல்லை", bookToGet: "டீல் புக் செய்யுங்கள் — பர்ச்சி இங்கே கிடைக்கும்", seeDeals: "டீல்களை பார்",
+    ready: "ரெடி", collectedTag: "வாங்கியாச்சு ✓", savedAmt: (x) => `${x} சேமிப்பு`,
+    parchiHint: "கடையில் கோடை சொல்லுங்கள் அல்லது காட்டுங்கள் — உணவு உங்களுடையது! 🙌",
+    dashTitle: "🏪 கடை டாஷ்போர்டு",
+    dashNote: "டெமோ முறை — மீதி உணவை பட்டியலிடுங்கள், பர்ச்சியை சரிபாருங்கள். உண்மையான ஆப் FSSAI பதிவுக்குப் பிறகு லைவ் ஆகும்.",
+    verifyTitle: "பர்ச்சியை சரிபார்", verifySub: "வாடிக்கையாளர் கோடை உள்ளிடுங்கள் (எ.கா. IND-4827)", check: "சரிபார்",
+    verifyOk: (c) => `பர்ச்சி ${c} சரிபார்க்கப்பட்டது — உணவை கொடுங்கள்! ✅`,
+    verifyFail: "இந்த கோட் கிடைக்கவில்லை அல்லது ஏற்கனவே வாங்கப்பட்டது.",
+    demoHint: (n, c) => `டெமோ குறிப்பு: ${n} ரெடி பர்ச்சி — ${c}`,
+    newListing: "புதிய லிஸ்டிங் உருவாக்கு", itemName: "பொருளின் பெயர்",
+    itemPh: "எ.கா: சமோசா + கசோரி காம்போ (4 pc)",
+    typeLabel: "வகை", qtyLabel: "எண்ணிக்கை", emojiLabel: "இமோஜி",
+    veg: "🟢 வெஜ்", nonveg: "🔴 நான்-வெஜ்", mrpLabel: "MRP (₹)", priceLabel: "சேமிப்பு விலை (₹)",
+    offPreview: (p) => `வாடிக்கையாளர் பார்ப்பது: -${p}% OFF 🔥`,
+    windowLabel: "பிக்கப் நேரம்", goLive: "லிஸ்டிங்கை லைவ் செய்", myListings: "என் லிஸ்டிங்குகள்", live: "லைவ்",
+    toastFill: "பொருள், MRP, சேமிப்பு விலை — மூன்றையும் நிரப்புங்கள்",
+    toastPrice: "சேமிப்பு விலை MRP-ஐ விட குறைவாக இருக்க வேண்டும்",
+    toastLive: "லிஸ்டிங் லைவ் ஆனது! 🎉",
+    loginPhone: "மொபைல் எண் (10 இலக்கம்)", loginPhoneErr: "10 இலக்க எண் உள்ளிடுங்கள்", loginSend: "OTP அனுப்பு",
+    loginOtpSent: (p) => `OTP அனுப்பப்பட்டது +91 ${p}`, loginOtpPh: "6-இலக்க OTP", loginName: "உங்கள் பெயர்",
+    loginVerify: "சரிபார்", loginDemoOtp: (o) => `டெமோ OTP: ${o} (உண்மையான ஆப்பில் SMS வரும்)`,
+    loginErr: "தவறான OTP — மீண்டும் முயற்சி", loginChange: "எண் மாற்று", logoutQ: "லாக்அவுட் செய்யவா?",
+    langTitle: "மொழியை தேர்வு செய் · Choose language",
+  },
+  te: {
+    tagline: "ఆహారం ఆదా చేయండి, డబ్బు ఆదా చేయండి — మిగులు ఆహారం 70% వరకు తగ్గింపు",
+    statMeals: "భోజనాలు ఆదా", statSavings: "కస్టమర్ ఆదా", statFood: "ఆహారం ఆదా",
+    tabShop: "కొనండి", tabParchi: "నా పర్చీ", tabDukaan: "దుకాణం",
+    allAreas: "అన్నీ",
+    dealsLive: (n) => `నేటి ఆదా • ${n} డీల్స్ లైవ్ 🔥`,
+    book: "బుక్ చేయండి", soldOut: "అయిపోయింది", left: (n) => `${n} మిగిలాయి`, finished: "అయిపోయింది",
+    pickupPrefix: "పికప్",
+    emptyArea: "ఈ ప్రాంతంలో ప్రస్తుతం డీల్స్ లేవు — కాసేపటికి చూడండి!",
+    howMany: "ఎన్ని కావాలి?", total: "మొత్తం",
+    youSave: (x) => `(${x} ఆదా!)`,
+    pickupNote: (w) => `పికప్ విండో: ${w} · సెల్ఫ్-పికప్ · అలర్జీ వివరాలు దుకాణంలో అడగండి`,
+    payUpi: (x) => `UPI తో చెల్లించండి — ${x}`,
+    paying: "UPI పేమెంట్ జరుగుతోంది…", demoNote: "డెమో మోడ్ — నిజమైన డబ్బు కట్ అవదు 😄",
+    confirmed: "బుకింగ్ కన్ఫర్మ్!", showParchi: "ఈ పర్చీని దుకాణంలో చూపించండి",
+    parchiLabel: "పికప్ పర్చీ", viewParchi: "నా పర్చీ చూడండి",
+    noParchi: "ఇంకా పర్చీ లేదు", bookToGet: "డీల్ బుక్ చేయండి — పర్చీ ఇక్కడ వస్తుంది", seeDeals: "డీల్స్ చూడండి",
+    ready: "రెడీ", collectedTag: "తీసుకున్నారు ✓", savedAmt: (x) => `${x} ఆదా`,
+    parchiHint: "దుకాణంలో కోడ్ చెప్పండి లేదా చూపించండి — భోజనం మీదే! 🙌",
+    dashTitle: "🏪 దుకాణం డాష్‌బోర్డ్",
+    dashNote: "డెమో మోడ్ — మిగులు లిస్ట్ చేయండి, పర్చీ వెరిఫై చేయండి. నిజమైన యాప్ FSSAI ఆన్‌బోర్డింగ్ తర్వాత లైవ్ అవుతుంది.",
+    verifyTitle: "పర్చీ వెరిఫై చేయండి", verifySub: "కస్టమర్ కోడ్ ఎంటర్ చేయండి (ఉదా. IND-4827)", check: "చెక్",
+    verifyOk: (c) => `పర్చీ ${c} వెరిఫైడ్ — భోజనం ఇవ్వండి! ✅`,
+    verifyFail: "ఈ కోడ్ దొరకలేదు లేదా ఇప్పటికే తీసుకున్నారు.",
+    demoHint: (n, c) => `డెమో హింట్: ${n} రెడీ పర్చీ — ${c}`,
+    newListing: "కొత్త లిస్టింగ్ చేయండి", itemName: "ఐటమ్ పేరు",
+    itemPh: "ఉదా: సమోసా + కచోరి కాంబో (4 pc)",
+    typeLabel: "రకం", qtyLabel: "సంఖ్య", emojiLabel: "ఇమోజీ",
+    veg: "🟢 వెజ్", nonveg: "🔴 నాన్-వెజ్", mrpLabel: "MRP (₹)", priceLabel: "ఆదా ధర (₹)",
+    offPreview: (p) => `కస్టమర్‌కు కనిపిస్తుంది: -${p}% OFF 🔥`,
+    windowLabel: "పికప్ విండో", goLive: "లిస్టింగ్ లైవ్ చేయండి", myListings: "నా లిస్టింగ్స్", live: "లైవ్",
+    toastFill: "ఐటమ్, MRP, ఆదా ధర — మూడూ నింపండి",
+    toastPrice: "ఆదా ధర MRP కంటే తక్కువ ఉండాలి",
+    toastLive: "లిస్టింగ్ లైవ్ అయ్యింది! 🎉",
+    loginPhone: "మొబైల్ నంబర్ (10 అంకెలు)", loginPhoneErr: "10 అంకెల నంబర్ ఎంటర్ చేయండి", loginSend: "OTP పంపండి",
+    loginOtpSent: (p) => `OTP పంపబడింది +91 ${p} కి`, loginOtpPh: "6-అంకెల OTP", loginName: "మీ పేరు",
+    loginVerify: "వెరిఫై చేయండి", loginDemoOtp: (o) => `డెమో OTP: ${o} (నిజమైన యాప్‌లో SMS వస్తుంది)`,
+    loginErr: "తప్పు OTP — మళ్లీ ప్రయత్నించండి", loginChange: "నంబర్ మార్చండి", logoutQ: "లాగౌట్ చేయాలా?",
+    langTitle: "భాష ఎంచుకోండి · Choose language",
+  },
+};
+
+const AREA_KEYS = ["ALL", "Vijay Nagar", "Bhawarkua", "Sarafa", "Chappan Dukan", "Palasia"];
+
+const API = "";
+
+const pct = (mrp, price) => Math.round(((mrp - price) / mrp) * 100);
+const inr = (n) => "₹" + n.toLocaleString("en-IN");
+const makeCode = () => "IND-" + Math.floor(1000 + Math.random() * 9000);
+
+function App() {
+  const [lang, setLang] = useState("hinglish");
+  const [langOpen, setLangOpen] = useState(false);
+  const [tab, setTab] = useState("shop");
+  const [area, setArea] = useState("ALL");
+  const [listings, setListings] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [booking, setBooking] = useState(null);
+  const [verifyInput, setVerifyInput] = useState("");
+  const [verifyMsg, setVerifyMsg] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [f, setF] = useState({ item: "", emoji: "🍛", veg: true, qty: 5, mrp: "", price: "", window: "8:30 – 10:00 PM" });
+  const [impact, setImpact] = useState({ meals: 0, rupees: 0, kg: 0 });
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  const t = STR[lang];
+
+  useEffect(() => {
+    if (!toast) return;
+    const tm = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(tm);
+  }, [toast]);
+
+  const token = () => window.localStorage.getItem("bk_token") || "";
+  const authHeaders = () => ({ "Content-Type": "application/json", "Authorization": "Bearer " + token() });
+  const loadListings = () => fetch(API + "/api/listings").then((r) => r.json()).then(setListings).catch(() => setToast("Backend nahi mila — pehle 'python backend.py' chalao"));
+  const loadOrders = () => fetch(API + "/api/orders", { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).then(setOrders).catch(() => {});
+  const loadImpact = () => fetch(API + "/api/impact").then((r) => r.json()).then(setImpact).catch(() => {});
+  useEffect(() => {
+    if (!token()) { setAuthReady(true); return; }
+    fetch(API + "/api/me", { headers: authHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => { if (u && u.phone) setUser(u); else window.localStorage.removeItem("bk_token"); })
+      .catch(() => {})
+      .finally(() => setAuthReady(true));
+  }, []);
+  useEffect(() => {
+    if (!user) return;
+    loadListings(); loadOrders(); loadImpact();
+  }, [user]);
+  const logout = () => {
+    window.localStorage.removeItem("bk_token");
+    setUser(null); setOrders([]);
+  };
+
+  const visible = listings.filter((l) => area === "ALL" || l.area === area);
+
+  /* ---------- actions ---------- */
+  const openBooking = (listing) => setBooking({ listing, qty: 1, stage: "select" });
+
+  const payNow = () => {
+    const { listing, qty } = booking;
+    setBooking((b) => ({ ...b, stage: "paying" }));
+    const finish = (order) => {
+      if (order && order.code) {
+        setBooking((b) => ({ ...b, stage: "done", order }));
+        loadListings(); loadOrders();
+      } else {
+        setBooking(null);
+        setToast(order && order.error ? order.error : "Kuch galat ho gaya");
+      }
+    };
+    fetch(API + "/api/pay/create", {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify({ listing_id: listing.id, qty }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.mode === "razorpay") {
+          const rzp = new window.Razorpay({
+            key: res.key_id,
+            amount: res.amount,
+            currency: "INR",
+            name: "BachatKhana",
+            description: listing.item,
+            order_id: res.rzp_order_id,
+            prefill: { contact: user.phone },
+            theme: { color: "#0E5E36" },
+            handler: (resp) => {
+              fetch(API + "/api/pay/confirm", {
+                method: "POST", headers: authHeaders(),
+                body: JSON.stringify({
+                  listing_id: listing.id, qty,
+                  razorpay_payment_id: resp.razorpay_payment_id,
+                  razorpay_order_id: resp.razorpay_order_id,
+                  razorpay_signature: resp.razorpay_signature,
+                }),
+              })
+                .then((r) => r.json())
+                .then(finish)
+                .catch(() => { setBooking(null); setToast("Backend se connection nahi ho paya"); });
+            },
+            modal: { ondismiss: () => setBooking((b) => (b && b.stage === "paying" ? { ...b, stage: "select" } : b)) },
+          });
+          rzp.open();
+        } else if (res.mode === "demo") {
+          setTimeout(() => {
+            fetch(API + "/api/orders", { method: "POST", headers: authHeaders(), body: JSON.stringify({ listing_id: listing.id, qty }) })
+              .then((r) => r.json())
+              .then(finish)
+              .catch(() => { setBooking(null); setToast("Backend se connection nahi ho paya"); });
+          }, 1200);
+        } else {
+          setBooking(null);
+          setToast(res && res.error ? res.error : "Kuch galat ho gaya");
+        }
+      })
+      .catch(() => { setBooking(null); setToast("Backend se connection nahi ho paya"); });
+  };
+
+  const verifyCode = () => {
+    const code = verifyInput.trim().toUpperCase();
+    if (!code) return;
+    fetch(API + "/api/verify", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ code }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.ok) {
+          setVerifyMsg({ ok: true, text: t.verifyOk(code) });
+          setVerifyInput("");
+          loadOrders(); loadImpact();
+        } else {
+          setVerifyMsg({ ok: false, text: t.verifyFail });
+        }
+      })
+      .catch(() => setVerifyMsg({ ok: false, text: "Backend se connection nahi ho paya" }));
+  };
+
+  const addListing = () => {
+    if (!f.item.trim() || !f.mrp || !f.price) { setToast(t.toastFill); return; }
+    if (Number(f.price) >= Number(f.mrp)) { setToast(t.toastPrice); return; }
+    fetch(API + "/api/listings", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ item: f.item.trim(), emoji: f.emoji, veg: f.veg, qty: Number(f.qty) || 1, mrp: Number(f.mrp), price: Number(f.price), window: f.window }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res && res.id) {
+          setF({ item: "", emoji: "🍛", veg: true, qty: 5, mrp: "", price: "", window: "8:30 – 10:00 PM" });
+          setToast(t.toastLive);
+          loadListings();
+        } else {
+          setToast(res && res.error ? res.error : "Kuch galat ho gaya");
+        }
+      })
+      .catch(() => setToast("Backend se connection nahi ho paya"));
+  };
+
+  const currentLang = LANGS.find((l) => l.key === lang);
+
+  /* ---------- render ---------- */
+  if (!authReady) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#DCE5DA", fontFamily: "'Baloo 2', system-ui, sans-serif", color: T.green, fontWeight: 800, fontSize: 20 }}>
+        BachatKhana…
+      </div>
+    );
+  }
+  if (!user) return <LoginView t={t} onLogin={setUser} />;
+  return (
+    <div style={{ minHeight: "100vh", background: "#DCE5DA", display: "flex", justifyContent: "center", fontFamily: "'Baloo 2','Baloo Bhai 2','Baloo Da 2','Baloo Thambi 2','Baloo Tammudu 2', system-ui, sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Baloo+Bhai+2:wght@400;600;700;800&family=Baloo+Da+2:wght@400;600;700;800&family=Baloo+Thambi+2:wght@400;600;700;800&family=Baloo+Tammudu+2:wght@400;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; }
+        button { font-family: inherit; cursor: pointer; border: none; }
+        input, select { font-family: inherit; }
+        input:focus, select:focus, button:focus-visible { outline: 3px solid ${T.haldi}; outline-offset: 1px; }
+        @keyframes popIn { from { transform: translateY(14px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+        .card-btn:active { transform: scale(.98); }
+      `}</style>
+
+      <div style={{ width: "100%", maxWidth: 430, background: T.paper, minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(0,0,0,.18)" }}>
+
+        {/* ===== Header ===== */}
+        <header style={{ background: T.greenDeep, padding: "14px 16px 14px", color: "#fff" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+              Bachat<span style={{ color: T.haldi }}>Khana</span>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => { if (window.confirm(t.logoutQ)) logout(); }} aria-label="Logout" style={{ background: "rgba(255,255,255,.14)", color: "#fff", borderRadius: 999, padding: "5px 11px", fontSize: 12.5, fontWeight: 700 }}>
+                👤 {(user.name || user.phone.slice(-4))}
+              </button>
+              <button onClick={() => setLangOpen(true)} aria-label="Change language" style={{ background: "rgba(255,255,255,.14)", color: "#fff", borderRadius: 999, padding: "5px 11px", fontSize: 12.5, fontWeight: 700 }}>
+                🌐 {currentLang.native}
+              </button>
+              <div style={{ background: "rgba(255,255,255,.12)", borderRadius: 999, padding: "5px 11px", fontSize: 12.5, fontWeight: 600 }}>
+                📍 Indore
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 3 }}>{t.tagline}</div>
+
+          {/* impact ticker */}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            {[
+              { n: impact.meals.toLocaleString("en-IN"), l: t.statMeals },
+              { n: inr(impact.rupees), l: t.statSavings },
+              { n: impact.kg.toLocaleString("en-IN") + " kg", l: t.statFood },
+            ].map((s, i) => (
+              <div key={i} style={{ flex: 1, background: "rgba(255,255,255,.09)", borderRadius: 12, padding: "8px 6px", textAlign: "center" }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: T.haldi }}>{s.n}</div>
+                <div style={{ fontSize: 10.5, opacity: 0.85 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </header>
+
+        {/* ===== Body ===== */}
+        <main style={{ flex: 1, overflowY: "auto", paddingBottom: 90 }}>
+          {tab === "shop" && <ShopView t={t} area={area} setArea={setArea} visible={visible} openBooking={openBooking} />}
+          {tab === "parchi" && <ParchiView t={t} orders={orders} goShop={() => setTab("shop")} />}
+          {tab === "dukaan" && (
+            <DukaanView
+              t={t} f={f} setF={setF} addListing={addListing}
+              listings={listings.filter((l) => l.mine)}
+              orders={orders}
+              verifyInput={verifyInput} setVerifyInput={setVerifyInput}
+              verifyCode={verifyCode} verifyMsg={verifyMsg}
+            />
+          )}
+        </main>
+
+        {/* ===== Bottom nav ===== */}
+        <nav style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: `1px solid ${T.line}`, display: "flex", padding: "8px 6px 12px" }}>
+          {[
+            { k: "shop", icon: "🛍️", label: t.tabShop },
+            { k: "parchi", icon: "🎟️", label: t.tabParchi, badge: orders.filter((o) => o.status === "READY").length },
+            { k: "dukaan", icon: "🏪", label: t.tabDukaan },
+          ].map((tb) => (
+            <button key={tb.k} onClick={() => setTab(tb.k)} style={{ flex: 1, background: "none", padding: "6px 0", position: "relative", color: tab === tb.k ? T.green : "#8A968C", fontWeight: tab === tb.k ? 800 : 600, fontSize: 12 }}>
+              <div style={{ fontSize: 21, filter: tab === tb.k ? "none" : "grayscale(.6)" }}>{tb.icon}</div>
+              {tb.label}
+              {tb.badge > 0 && (
+                <span style={{ position: "absolute", top: 0, right: "24%", background: T.mirch, color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 800, padding: "1px 6px" }}>{tb.badge}</span>
+              )}
+              {tab === tb.k && <div style={{ height: 3, width: 26, background: T.haldi, borderRadius: 4, margin: "4px auto 0" }} />}
+            </button>
+          ))}
+        </nav>
+
+        {/* ===== Language sheet ===== */}
+        {langOpen && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(10,25,15,.55)", display: "flex", alignItems: "flex-end", zIndex: 70 }} onClick={() => setLangOpen(false)}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", borderRadius: "22px 22px 0 0", padding: "20px 18px 26px", animation: "popIn .28s ease", maxHeight: "75%", overflowY: "auto" }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: T.ink, marginBottom: 14 }}>🌐 {t.langTitle}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {LANGS.map((l) => {
+                  const active = l.key === lang;
+                  return (
+                    <button key={l.key} onClick={() => { setLang(l.key); setLangOpen(false); }} style={{
+                      background: active ? T.haldiSoft : T.paper,
+                      border: `2px solid ${active ? T.haldi : T.line}`,
+                      borderRadius: 14, padding: "12px 10px", textAlign: "left",
+                    }}>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: T.ink }}>
+                        {l.native} {active && <span style={{ color: T.green }}>✓</span>}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "#7B877D", fontWeight: 600 }}>{l.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== Booking modal ===== */}
+        {booking && (
+          <BookingSheet t={t} booking={booking} setBooking={setBooking} payNow={payNow} goParchi={() => { setBooking(null); setTab("parchi"); }} />
+        )}
+
+        {/* ===== Toast ===== */}
+        {toast && (
+          <div style={{ position: "absolute", bottom: 96, left: "50%", transform: "translateX(-50%)", background: T.ink, color: "#fff", padding: "10px 18px", borderRadius: 999, fontSize: 13.5, fontWeight: 600, whiteSpace: "nowrap", animation: "popIn .25s ease", zIndex: 60 }}>
+            {toast}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================= Shop (customer) ================= */
+function ShopView({ t, area, setArea, visible, openBooking }) {
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "14px 16px 6px", scrollbarWidth: "none" }}>
+        {AREA_KEYS.map((a) => (
+          <button key={a} onClick={() => setArea(a)} style={{
+            flexShrink: 0, padding: "7px 14px", borderRadius: 999, fontSize: 13, fontWeight: 700,
+            background: area === a ? T.green : "#fff",
+            color: area === a ? "#fff" : T.body,
+            border: `1.5px solid ${area === a ? T.green : T.line}`,
+          }}>{a === "ALL" ? t.allAreas : a}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: "8px 16px 4px", fontSize: 13, color: T.body, fontWeight: 600 }}>
+        {t.dealsLive(visible.filter((l) => l.qty > 0).length)}
+      </div>
+
+      <div style={{ padding: "6px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {visible.map((l) => {
+          const out = l.qty <= 0;
+          return (
+            <div key={l.id} className="card-btn" style={{ background: T.card, borderRadius: 18, padding: 14, border: `1px solid ${T.line}`, opacity: out ? 0.55 : 1, animation: "popIn .3s ease", transition: "transform .1s" }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ width: 62, height: 62, borderRadius: 14, background: T.haldiSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
+                  {l.emoji}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 12, height: 12, borderRadius: 3, border: `2px solid ${l.veg ? "#1E8E3E" : "#B3261E"}`, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: l.veg ? "#1E8E3E" : "#B3261E" }} />
+                    </span>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.shop}</div>
+                  </div>
+                  <div style={{ fontSize: 13, color: T.body, lineHeight: 1.35, marginTop: 2 }}>{l.item}</div>
+                  <div style={{ fontSize: 11.5, color: "#7B877D", marginTop: 3 }}>
+                    ⭐ {l.rating} · {l.area} · {l.dist}
+                  </div>
+                </div>
+                <div style={{ background: T.mirch, color: "#fff", borderRadius: 10, fontWeight: 800, fontSize: 13, padding: "4px 8px", height: "fit-content" }}>
+                  -{pct(l.mrp, l.price)}%
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ fontWeight: 800, fontSize: 19, color: T.green }}>{inr(l.price)}</span>
+                  <span style={{ fontSize: 13, color: "#96A198", textDecoration: "line-through", marginLeft: 7 }}>{inr(l.mrp)}</span>
+                  <div style={{ fontSize: 11.5, color: T.body, marginTop: 1 }}>🕘 {t.pickupPrefix}: {l.window} · {out ? t.finished : t.left(l.qty)}</div>
+                </div>
+                <button disabled={out} onClick={() => openBooking(l)} style={{
+                  background: out ? "#C4CDC5" : T.green, color: "#fff", fontWeight: 800, fontSize: 13.5,
+                  padding: "10px 16px", borderRadius: 12, flexShrink: 0,
+                }}>{out ? t.soldOut : t.book}</button>
+              </div>
+            </div>
+          );
+        })}
+        {visible.length === 0 && (
+          <div style={{ textAlign: "center", padding: 40, color: T.body }}>{t.emptyArea}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================= Booking sheet ================= */
+function BookingSheet({ t, booking, setBooking, payNow, goParchi }) {
+  const { listing: l, qty, stage, order } = booking;
+  const maxQty = Math.min(3, l.qty);
+  const total = l.price * qty;
+  const saved = (l.mrp - l.price) * qty;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "rgba(10,25,15,.55)", display: "flex", alignItems: "flex-end", zIndex: 50 }}
+      onClick={() => stage !== "paying" && setBooking(null)}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", borderRadius: "22px 22px 0 0", padding: "20px 20px 26px", animation: "popIn .28s ease" }}>
+
+        {stage === "select" && (
+          <>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ fontSize: 38 }}>{l.emoji}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: 16, color: T.ink }}>{l.shop}</div>
+                <div style={{ fontSize: 13, color: T.body }}>{l.item}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, background: T.paper, borderRadius: 14, padding: "12px 14px" }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: T.ink }}>{t.howMany}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <button onClick={() => setBooking((b) => ({ ...b, qty: Math.max(1, b.qty - 1) }))} style={qtyBtn}>−</button>
+                <span style={{ fontWeight: 800, fontSize: 18, minWidth: 20, textAlign: "center" }}>{qty}</span>
+                <button onClick={() => setBooking((b) => ({ ...b, qty: Math.min(maxQty, b.qty + 1) }))} style={qtyBtn}>+</button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, fontSize: 14.5, gap: 8, flexWrap: "wrap" }}>
+              <span style={{ color: T.body }}>{t.total}</span>
+              <span style={{ fontWeight: 800, color: T.ink }}>{inr(total)} <span style={{ color: T.mirch, fontSize: 12.5, fontWeight: 700 }}>{t.youSave(inr(saved))}</span></span>
+            </div>
+            <div style={{ fontSize: 11.5, color: "#7B877D", marginTop: 4 }}>{t.pickupNote(l.window)}</div>
+
+            <button onClick={payNow} style={{ width: "100%", marginTop: 16, background: T.green, color: "#fff", fontWeight: 800, fontSize: 15.5, padding: "15px", borderRadius: 14 }}>
+              {t.payUpi(inr(total))}
+            </button>
+          </>
+        )}
+
+        {stage === "paying" && (
+          <div style={{ textAlign: "center", padding: "30px 0 34px" }}>
+            <div style={{ width: 46, height: 46, border: `4px solid ${T.line}`, borderTopColor: T.green, borderRadius: "50%", margin: "0 auto", animation: "spin .8s linear infinite" }} />
+            <div style={{ fontWeight: 800, fontSize: 16, marginTop: 16, color: T.ink }}>{t.paying}</div>
+            <div style={{ fontSize: 13, color: T.body, marginTop: 4 }}>{t.demoNote}</div>
+          </div>
+        )}
+
+        {stage === "done" && order && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 40 }}>🎉</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: T.ink }}>{t.confirmed}</div>
+            <div style={{ fontSize: 13, color: T.body, marginTop: 2 }}>{t.showParchi}</div>
+
+            <div style={{ margin: "16px auto 0", maxWidth: 300, background: T.haldiSoft, border: `2px dashed ${T.haldi}`, borderRadius: 16, padding: "16px 14px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.body, letterSpacing: 1.5, textTransform: "uppercase" }}>{t.parchiLabel}</div>
+              <div style={{ fontWeight: 800, fontSize: 32, color: T.green, letterSpacing: 2, margin: "4px 0" }}>{order.code}</div>
+              <div style={{ fontSize: 13, color: T.ink, fontWeight: 700 }}>{order.shop}</div>
+              <div style={{ fontSize: 12.5, color: T.body }}>{order.qty} × {order.item}</div>
+              <div style={{ fontSize: 12, color: T.body, marginTop: 4 }}>🕘 {order.window}</div>
+            </div>
+
+            <button onClick={goParchi} style={{ width: "100%", marginTop: 16, background: T.green, color: "#fff", fontWeight: 800, fontSize: 15, padding: "14px", borderRadius: 14 }}>
+              {t.viewParchi}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const qtyBtn = { width: 34, height: 34, borderRadius: 10, background: "#fff", border: `1.5px solid ${T.line}`, fontSize: 20, fontWeight: 800, color: T.ink, lineHeight: 1 };
+
+/* ================= Parchi (orders) ================= */
+function ParchiView({ t, orders, goShop }) {
+  if (orders.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "70px 30px" }}>
+        <div style={{ fontSize: 46 }}>🎟️</div>
+        <div style={{ fontWeight: 800, fontSize: 17, color: T.ink, marginTop: 8 }}>{t.noParchi}</div>
+        <div style={{ fontSize: 13.5, color: T.body, marginTop: 4 }}>{t.bookToGet}</div>
+        <button onClick={goShop} style={{ marginTop: 18, background: T.green, color: "#fff", fontWeight: 800, fontSize: 14, padding: "12px 24px", borderRadius: 12 }}>
+          {t.seeDeals}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      {orders.map((o) => {
+        const done = o.status === "COLLECTED";
+        return (
+          <div key={o.id} style={{ background: done ? "#EFF3EE" : T.haldiSoft, border: `2px dashed ${done ? "#B9C6BB" : T.haldi}`, borderRadius: 18, padding: 16, opacity: done ? 0.75 : 1, animation: "popIn .3s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.body, letterSpacing: 1.5, textTransform: "uppercase" }}>{t.parchiLabel}</div>
+                <div style={{ fontWeight: 800, fontSize: 28, color: done ? "#8A968C" : T.green, letterSpacing: 2 }}>{o.code}</div>
+              </div>
+              <span style={{ background: done ? "#8A968C" : T.green, color: "#fff", fontSize: 11.5, fontWeight: 800, padding: "5px 10px", borderRadius: 999, flexShrink: 0 }}>
+                {done ? t.collectedTag : t.ready}
+              </span>
+            </div>
+            <div style={{ borderTop: `1.5px dashed ${done ? "#C6D0C8" : T.haldi}`, margin: "10px 0" }} />
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <div style={{ fontSize: 28 }}>{o.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 14.5, color: T.ink }}>{o.shop}</div>
+                <div style={{ fontSize: 12.5, color: T.body }}>{o.qty} × {o.item}</div>
+                <div style={{ fontSize: 11.5, color: T.body, marginTop: 2 }}>🕘 {o.window} · {o.area}</div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontWeight: 800, color: T.ink }}>{inr(o.total)}</div>
+                <div style={{ fontSize: 11.5, color: T.mirch, fontWeight: 700 }}>{t.savedAmt(inr(o.saved))}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ fontSize: 11.5, color: "#7B877D", textAlign: "center", padding: "4px 20px" }}>
+        {t.parchiHint}
+      </div>
+    </div>
+  );
+}
+
+/* ================= Dukaan (seller) ================= */
+function DukaanView({ t, f, setF, addListing, listings, orders, verifyInput, setVerifyInput, verifyCode, verifyMsg }) {
+  const ready = orders.filter((o) => o.status === "READY");
+  const lbl = { display: "block", fontSize: 12, fontWeight: 700, color: T.body, marginTop: 12, marginBottom: 5 };
+  const inp = { width: "100%", border: `1.5px solid ${T.line}`, borderRadius: 12, padding: "11px 13px", fontSize: 14, background: "#fff", color: T.ink };
+
+  return (
+    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+
+      <div style={{ background: T.greenDeep, borderRadius: 18, padding: "14px 16px", color: "#fff" }}>
+        <div style={{ fontWeight: 800, fontSize: 16 }}>{t.dashTitle}</div>
+        <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 2 }}>{t.dashNote}</div>
+      </div>
+
+      {/* verify code */}
+      <div style={{ background: "#fff", borderRadius: 18, padding: 16, border: `1px solid ${T.line}` }}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: T.ink }}>{t.verifyTitle}</div>
+        <div style={{ fontSize: 12.5, color: T.body, marginTop: 2 }}>{t.verifySub}</div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <input
+            value={verifyInput}
+            onChange={(e) => setVerifyInput(e.target.value)}
+            placeholder="IND-0000"
+            style={{ flex: 1, minWidth: 0, border: `1.5px solid ${T.line}`, borderRadius: 12, padding: "12px 14px", fontSize: 15, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}
+          />
+          <button onClick={verifyCode} style={{ background: T.haldi, color: T.ink, fontWeight: 800, fontSize: 14, padding: "0 18px", borderRadius: 12, flexShrink: 0 }}>
+            {t.check}
+          </button>
+        </div>
+        {verifyMsg && (
+          <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: verifyMsg.ok ? T.green : T.mirch }}>{verifyMsg.text}</div>
+        )}
+        {ready.length > 0 && (
+          <div style={{ fontSize: 11.5, color: "#7B877D", marginTop: 8 }}>
+            {t.demoHint(ready.length, ready.map((o) => o.code).join(", "))}
+          </div>
+        )}
+      </div>
+
+      {/* new listing form */}
+      <div style={{ background: "#fff", borderRadius: 18, padding: 16, border: `1px solid ${T.line}` }}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: T.ink }}>{t.newListing}</div>
+
+        <label style={lbl}>{t.itemName}</label>
+        <input value={f.item} onChange={(e) => setF({ ...f, item: e.target.value })} placeholder={t.itemPh} style={inp} />
+
+        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>{t.emojiLabel}</label>
+            <select value={f.emoji} onChange={(e) => setF({ ...f, emoji: e.target.value })} style={inp}>
+              {["🍛", "🍬", "🍰", "🥘", "🌭", "🍗", "🥨", "🍞", "🥟", "🍕"].map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>{t.typeLabel}</label>
+            <select value={f.veg ? "veg" : "nonveg"} onChange={(e) => setF({ ...f, veg: e.target.value === "veg" })} style={inp}>
+              <option value="veg">{t.veg}</option>
+              <option value="nonveg">{t.nonveg}</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>{t.qtyLabel}</label>
+            <input type="number" min="1" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value })} style={inp} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>{t.mrpLabel}</label>
+            <input type="number" min="1" value={f.mrp} onChange={(e) => setF({ ...f, mrp: e.target.value })} placeholder="150" style={inp} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>{t.priceLabel}</label>
+            <input type="number" min="1" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} placeholder="49" style={inp} />
+          </div>
+        </div>
+        {Number(f.mrp) > 0 && Number(f.price) > 0 && Number(f.price) < Number(f.mrp) && (
+          <div style={{ marginTop: 8, fontSize: 13, fontWeight: 800, color: T.mirch }}>
+            {t.offPreview(pct(Number(f.mrp), Number(f.price)))}
+          </div>
+        )}
+
+        <label style={lbl}>{t.windowLabel}</label>
+        <select value={f.window} onChange={(e) => setF({ ...f, window: e.target.value })} style={inp}>
+          {["10:30 AM – 12 PM", "7:00 – 9:30 PM", "8:30 – 10:00 PM", "9:00 – 11:30 PM"].map((w) => <option key={w} value={w}>{w}</option>)}
+        </select>
+
+        <button onClick={addListing} style={{ width: "100%", marginTop: 14, background: T.green, color: "#fff", fontWeight: 800, fontSize: 15, padding: "14px", borderRadius: 14 }}>
+          {t.goLive}
+        </button>
+      </div>
+
+      {/* my listings */}
+      {listings.length > 0 && (
+        <div style={{ background: "#fff", borderRadius: 18, padding: 16, border: `1px solid ${T.line}` }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: T.ink, marginBottom: 8 }}>{t.myListings}</div>
+          {listings.map((l) => (
+            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.paper}` }}>
+              <span style={{ fontSize: 22 }}>{l.emoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: T.ink }}>{l.item}</div>
+                <div style={{ fontSize: 11.5, color: T.body }}>{inr(l.price)} <s style={{ color: "#96A198" }}>{inr(l.mrp)}</s> · {t.left(l.qty)} · {l.window}</div>
+              </div>
+              <span style={{ background: l.qty > 0 ? "#E4F2E7" : "#F3E3E0", color: l.qty > 0 ? T.green : T.mirch, fontSize: 11, fontWeight: 800, padding: "4px 9px", borderRadius: 999, flexShrink: 0 }}>
+                {l.qty > 0 ? t.live : t.soldOut}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+/* ================= Login (OTP) ================= */
+function LoginView({ t, onLogin }) {
+  const [stage, setStage] = useState("phone");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [name, setName] = useState("");
+  const [isNew, setIsNew] = useState(false);
+  const [demoOtp, setDemoOtp] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const digits = (s) => s.replace(/[^0-9]/g, "").slice(-10);
+  const inpL = { width: "100%", border: `1.5px solid ${T.line}`, borderRadius: 14, padding: "14px 15px", fontSize: 16, background: "#fff", color: T.ink, fontWeight: 700 };
+  const btnL = { width: "100%", marginTop: 12, background: T.green, color: "#fff", fontWeight: 800, fontSize: 15.5, padding: "15px", borderRadius: 14, opacity: busy ? 0.6 : 1 };
+
+  const sendOtp = () => {
+    const p = digits(phone);
+    if (p.length !== 10) { setErr(t.loginPhoneErr); return; }
+    setBusy(true); setErr(null);
+    fetch("/api/auth/send-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: p }) })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.ok) { setIsNew(!!res.is_new); setDemoOtp(res.demo_otp || null); setStage("otp"); }
+        else setErr(res.error || t.loginErr);
+      })
+      .catch(() => setErr("Backend nahi mila — 'python backend.py' chal raha hai?"))
+      .finally(() => setBusy(false));
+  };
+
+  const verify = () => {
+    setBusy(true); setErr(null);
+    fetch("/api/auth/verify-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: digits(phone), otp: otp.trim(), name: name.trim() }) })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.token) { window.localStorage.setItem("bk_token", res.token); onLogin(res.user); }
+        else setErr(res.error || t.loginErr);
+      })
+      .catch(() => setErr("Backend se connection nahi ho paya"))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#DCE5DA", display: "flex", justifyContent: "center", fontFamily: "'Baloo 2','Baloo Bhai 2','Baloo Da 2','Baloo Thambi 2','Baloo Tammudu 2', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", maxWidth: 430, background: T.paper, minHeight: "100vh", display: "flex", flexDirection: "column", boxShadow: "0 0 40px rgba(0,0,0,.18)" }}>
+        <div style={{ background: T.greenDeep, padding: "48px 24px 36px", color: "#fff", textAlign: "center" }}>
+          <div style={{ fontWeight: 800, fontSize: 34, letterSpacing: "-0.5px" }}>
+            Bachat<span style={{ color: T.haldi }}>Khana</span>
+          </div>
+          <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 6 }}>{t.tagline}</div>
+        </div>
+        <div style={{ padding: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 20, border: `1px solid ${T.line}` }}>
+            {stage === "phone" && (
+              <>
+                <div style={{ fontWeight: 800, fontSize: 17, color: T.ink, marginBottom: 12 }}>{t.loginPhone}</div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontWeight: 800, color: T.body, fontSize: 16 }}>+91</span>
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98765 43210" inputMode="numeric" style={{ ...inpL, flex: 1 }} />
+                </div>
+                <button disabled={busy} onClick={sendOtp} style={btnL}>{t.loginSend}</button>
+              </>
+            )}
+            {stage === "otp" && (
+              <>
+                <div style={{ fontWeight: 800, fontSize: 16, color: T.ink }}>{t.loginOtpSent(digits(phone))}</div>
+                {demoOtp && (
+                  <div style={{ marginTop: 8, background: T.haldiSoft, border: `1.5px dashed ${T.haldi}`, borderRadius: 12, padding: "9px 12px", fontSize: 13.5, fontWeight: 800, color: T.ink }}>
+                    {t.loginDemoOtp(demoOtp)}
+                  </div>
+                )}
+                <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder={t.loginOtpPh} inputMode="numeric" style={{ ...inpL, marginTop: 12, letterSpacing: 6, textAlign: "center" }} />
+                {isNew && (
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.loginName} style={{ ...inpL, marginTop: 10 }} />
+                )}
+                <button disabled={busy} onClick={verify} style={btnL}>{t.loginVerify}</button>
+                <button onClick={() => { setStage("phone"); setOtp(""); setErr(null); }} style={{ width: "100%", marginTop: 8, background: "none", color: T.body, fontWeight: 700, fontSize: 13, padding: 6 }}>
+                  {t.loginChange}
+                </button>
+              </>
+            )}
+            {err && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: T.mirch }}>{err}</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
