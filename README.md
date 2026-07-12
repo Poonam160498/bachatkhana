@@ -2,9 +2,16 @@
 
 **Khana Bachao. Paise Bachao.**
 
+🌍 **Live demo:** [bachatkhana.onrender.com](https://bachatkhana.onrender.com)
+*(Free hosting — first load can take 30–50 seconds while the app wakes up. Login OTP appears on screen — demo mode, no SMS needed.)*
+
 BachatKhana is a surplus-food marketplace app that lets local food businesses (sweet shops, bakeries, tiffin services, caterers) sell their end-of-day surplus to nearby customers at 50–70% off — with self-pickup, so every order is margin-positive from day one.
 
 🏙️ **Launch city: Indore, India** — the country's cleanest city and the food capital of Central India.
+
+## 📸 App preview
+
+<img src="screenshot.png" width="320" alt="BachatKhana app screenshot">
 
 ---
 
@@ -70,6 +77,7 @@ bachatkhana/
 ├── backend.py         # Flask server: auth, listings, orders, payments, impact
 ├── index.html         # Full React app: customer + seller + login (8 languages)
 ├── requirements.txt   # Python dependencies
+├── screenshot.png     # App preview for this README
 └── bachatkhana.db     # SQLite database (auto-created — do NOT commit)
 ```
 
@@ -78,6 +86,7 @@ bachatkhana/
 - [x] Marketplace core: listings → booking → parchi → verification
 - [x] OTP login + sessions
 - [x] Razorpay integration (test mode)
+- [x] Live deployment on Render
 - [ ] SMS OTP provider (MSG91) for production
 - [ ] FSSAI-verified seller onboarding + trust badges
 - [ ] Persistent managed database (Postgres) for pilot
