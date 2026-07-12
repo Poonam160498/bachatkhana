@@ -1,4 +1,4 @@
-<img width="436" height="745" alt="Screenshot 2026-07-12 at 21 37 51" src="https://github.com/user-attachments/assets/b53ee224-ad59-4a88-b2c8-a515edbf8a34" />
+
 # 🍛 BachatKhana
 
 **Khana Bachao. Paise Bachao.**
@@ -12,8 +12,7 @@ BachatKhana is a surplus-food marketplace app that lets local food businesses (s
 
 ## 📸 App preview
 
-<img src="screenshot.png" width="320" alt="BachatKhana app screenshot">
-
+<img width="436" height="745" alt="Screenshot 2026-07-12 at 21 37 51" src="https://github.com/user-attachments/assets/b53ee224-ad59-4a88-b2c8-a515edbf8a34" />
 ---
 
 ## ✨ Features
